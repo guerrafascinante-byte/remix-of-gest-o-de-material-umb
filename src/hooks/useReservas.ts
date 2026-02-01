@@ -101,13 +101,13 @@ export const useReservas = () => {
   const reservasFiltradas = useMemo(() => {
     return reservas.filter(reserva => {
       const matchLocalidade = filtroLocalidade === 'Todos' || reserva.localidade === filtroLocalidade;
-      const matchMaterial = !filtroMaterial || 
+      const matchMaterial = !filtroMaterial ||
         reserva.material_nome.toLowerCase().includes(filtroMaterial.toLowerCase()) ||
         reserva.material_codigo.includes(filtroMaterial);
       const matchStatus = filtroStatus === 'Todos' || reserva.status === filtroStatus;
       const matchMes = filtroMes === 'Todos' || reserva.mes_referencia === filtroMes;
       const matchAno = reserva.ano_referencia === filtroAno;
-      
+
       return matchLocalidade && matchMaterial && matchStatus && matchMes && matchAno;
     });
   }, [reservas, filtroLocalidade, filtroMaterial, filtroStatus, filtroMes, filtroAno]);
@@ -125,7 +125,7 @@ export const useReservas = () => {
     const totalReservas = historicoFiltrado.filter(
       h => h.tipo_importacao === 'liberacao' && h.status === 'Sucesso'
     ).length;
-    
+
     return {
       totalReservas,
       totalLiberado: reservasFiltradas.reduce((acc, r) => acc + r.quantidade_liberada, 0),
@@ -184,25 +184,25 @@ export const useReservas = () => {
         if (tipo === 'utilizacao') {
           quantidade = Number(
             row['Quantidade Utilizada'] ||
-              row['quantidade_utilizada'] ||
-              row['Total Utilizado'] ||
-              row['Qtd Utilizada'] ||
-              row.quantidade ||
-              row['quantidade'] ||
-              row['Quantidade'] ||
-              row['QTD'] ||
-              row['Qtd'] ||
-              0
+            row['quantidade_utilizada'] ||
+            row['Total Utilizado'] ||
+            row['Qtd Utilizada'] ||
+            row.quantidade ||
+            row['quantidade'] ||
+            row['Quantidade'] ||
+            row['QTD'] ||
+            row['Qtd'] ||
+            0
           );
         } else {
           quantidade = Number(
             row.quantidade ||
-              row['quantidade'] ||
-              row['Quantidade'] ||
-              row['QTD'] ||
-              row['Qtd'] ||
-              row['Qtd.necessária'] ||
-              0
+            row['quantidade'] ||
+            row['Quantidade'] ||
+            row['QTD'] ||
+            row['Qtd'] ||
+            row['Qtd.necessária'] ||
+            0
           );
         }
 
@@ -228,11 +228,11 @@ export const useReservas = () => {
         }
 
         const materialNomeTrimmed = String(materialNome).trim().toUpperCase();
-        
+
         // Buscar primeiro por material_codigo (identificador único), depois por nome exato
         let existingReserva = null;
         const materialCodigoTrimmed = String(materialCodigo).trim();
-        
+
         // Primeira tentativa: match por código do material (mais confiável)
         if (materialCodigoTrimmed) {
           const { data: byCode } = await supabaseClient
@@ -242,10 +242,10 @@ export const useReservas = () => {
             .eq('localidade', localidade)
             .eq('mes_referencia', mesReferencia)
             .maybeSingle();
-          
+
           existingReserva = byCode;
         }
-        
+
         // Segunda tentativa: match exato por nome completo (case-insensitive)
         if (!existingReserva) {
           const { data: byName } = await supabaseClient
@@ -255,12 +255,12 @@ export const useReservas = () => {
             .eq('localidade', localidade)
             .eq('mes_referencia', mesReferencia)
             .maybeSingle();
-          
+
           existingReserva = byName;
         }
-        
+
         // Match parcial REMOVIDO - causava conflitos com materiais similares
-        
+
         console.log('Match result for:', materialNomeTrimmed.substring(0, 30), '-> found:', !!existingReserva);
 
         if (existingReserva) {
@@ -272,7 +272,7 @@ export const useReservas = () => {
           updateData.material_nome = String(materialNome).trim();
           if (numeroReserva) updateData.numero_reserva = String(numeroReserva).trim();
           updateData.empreiteira = empreiteira;
-          
+
           if (tipo === 'solicitacao') {
             updateData.quantidade_solicitada = quantidade;
           }
@@ -291,7 +291,7 @@ export const useReservas = () => {
             .from('reservas')
             .update(updateData)
             .eq('id', (existingReserva as any).id);
-          
+
           if (!updateError) registrosAtualizados++;
         } else {
           // Criar novo registro
@@ -317,7 +317,7 @@ export const useReservas = () => {
           const { error: insertError } = await supabaseClient
             .from('reservas')
             .insert(novaReserva);
-          
+
           if (!insertError) registrosNovos++;
         }
         registrosProcessados++;
@@ -337,7 +337,7 @@ export const useReservas = () => {
         });
 
       await Promise.all([fetchReservas(), fetchHistoricoImportacoes()]);
-      
+
       const tipoLabel = tipo === 'solicitacao' ? 'Solicitados' : tipo === 'liberacao' ? 'Liberados' : 'Utilizados';
       toast({
         title: 'Importação concluída!',
@@ -358,12 +358,16 @@ export const useReservas = () => {
 
   const adicionarReserva = useCallback(async (novaReserva: Partial<Reserva>) => {
     try {
+      // Remove campos gerados pelo banco para evitar erros
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { saldo, ...dadosParaInserir } = novaReserva;
+
       const { error } = await supabaseClient
         .from('reservas')
-        .insert(novaReserva);
-      
+        .insert(dadosParaInserir);
+
       if (error) throw error;
-      
+
       await fetchReservas();
       toast({ title: 'Sucesso', description: 'Reserva adicionada com sucesso.' });
       return true;
@@ -380,9 +384,9 @@ export const useReservas = () => {
         .from('reservas')
         .update(dados)
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       await fetchReservas();
       toast({ title: 'Sucesso', description: 'Reserva atualizada com sucesso.' });
       return true;
@@ -399,9 +403,9 @@ export const useReservas = () => {
         .from('reservas')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       await fetchReservas();
       toast({ title: 'Sucesso', description: 'Reserva excluída com sucesso.' });
       return true;
@@ -424,7 +428,7 @@ export const useReservas = () => {
       acc[r.material_nome].quantidade += qtdMaior;
       return acc;
     }, {} as Record<string, { nome: string; quantidade: number }>);
-    
+
     return Object.values(agrupado)
       .filter(item => item.quantidade > 0)
       .sort((a, b) => b.quantidade - a.quantidade)
@@ -436,8 +440,8 @@ export const useReservas = () => {
       .map(r => ({
         materialNome: r.material_nome,
         divergencia: r.quantidade_liberada - r.quantidade_utilizada,
-        percentualDivergencia: r.quantidade_liberada > 0 
-          ? ((r.quantidade_liberada - r.quantidade_utilizada) / r.quantidade_liberada) * 100 
+        percentualDivergencia: r.quantidade_liberada > 0
+          ? ((r.quantidade_liberada - r.quantidade_utilizada) / r.quantidade_liberada) * 100
           : 0
       }))
       .filter(r => r.divergencia > 0)
@@ -449,7 +453,7 @@ export const useReservas = () => {
     const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     return meses.map((mes, index) => {
       const reservasDoMes = reservasFiltradas.filter(r => r.mes_referencia === mes);
-      
+
       return {
         mes: nomesMeses[index],
         liberado: reservasDoMes.reduce((acc, r) => acc + r.quantidade_liberada, 0),
@@ -462,7 +466,7 @@ export const useReservas = () => {
   const distribuicaoLiberadoUtilizado = useMemo(() => {
     const totalLiberado = reservasFiltradas.reduce((acc, r) => acc + r.quantidade_liberada, 0);
     const totalUtilizado = reservasFiltradas.reduce((acc, r) => acc + r.quantidade_utilizada, 0);
-    
+
     return [
       { name: 'Qtd. Liberada', value: totalLiberado, fill: 'hsl(var(--primary))' },
       { name: 'Qtd. Utilizada', value: totalUtilizado, fill: 'hsl(var(--chart-1))' },
@@ -503,7 +507,7 @@ export const useReservas = () => {
     const materiais = visaoGeralPorMaterial;
     const totalLiberado = materiais.reduce((acc, m) => acc + m.liberado, 0);
     const totalUtilizado = materiais.reduce((acc, m) => acc + m.utilizado, 0);
-    
+
     return {
       taxaUtilizacao: totalLiberado > 0 ? (totalUtilizado / totalLiberado) * 100 : 0,
       materiaisUnicos: materiais.length,
@@ -519,7 +523,7 @@ export const useReservas = () => {
     const alta = materiais.filter(m => m.taxaUtilizacao >= 80).length;
     const media = materiais.filter(m => m.taxaUtilizacao >= 40 && m.taxaUtilizacao < 80).length;
     const baixa = materiais.filter(m => m.taxaUtilizacao < 40).length;
-    
+
     return [
       { name: 'Alta (≥80%)', value: alta, fill: 'hsl(var(--chart-2))' },
       { name: 'Média (40-80%)', value: media, fill: 'hsl(var(--chart-4))' },

@@ -37,7 +37,7 @@ export const ManualEntryForm = () => {
     dataReserva: '',
   });
   const [saving, setSaving] = useState(false);
-  
+
   const { toast } = useToast();
   const { adicionarReserva } = useReservas();
 
@@ -47,7 +47,7 @@ export const ManualEntryForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.numeroReserva || !formData.materialCodigo || !formData.materialNome) {
       toast({
         title: 'Campos obrigatórios',
@@ -58,7 +58,7 @@ export const ManualEntryForm = () => {
     }
 
     setSaving(true);
-    
+
     const reservaData = {
       numero_reserva: formData.numeroReserva.trim(),
       material_codigo: formData.materialCodigo.trim(),
@@ -68,14 +68,14 @@ export const ManualEntryForm = () => {
       ano_referencia: 2025,
       quantidade_liberada: Number(formData.quantidadeLiberada) || 0,
       quantidade_utilizada: Number(formData.quantidadeUtilizada) || 0,
-      saldo: (Number(formData.quantidadeLiberada) || 0) - (Number(formData.quantidadeUtilizada) || 0),
+      // saldo is a generated column in DB, do not send it
       justificativa: formData.justificativa.trim() || null,
       data_reserva: formData.dataReserva || null,
     };
 
     const success = await adicionarReserva(reservaData);
     setSaving(false);
-    
+
     if (success) {
       toast({
         title: 'Registro salvo',
@@ -119,7 +119,7 @@ export const ManualEntryForm = () => {
                 onChange={(e) => handleChange('numeroReserva', e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="materialCodigo">Código do Material *</Label>
               <Input
@@ -129,7 +129,7 @@ export const ManualEntryForm = () => {
                 onChange={(e) => handleChange('materialCodigo', e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="materialNome">Nome do Material *</Label>
               <Input
@@ -139,11 +139,11 @@ export const ManualEntryForm = () => {
                 onChange={(e) => handleChange('materialNome', e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="localidade">Localidade *</Label>
-              <Select 
-                value={formData.localidade} 
+              <Select
+                value={formData.localidade}
                 onValueChange={(v) => handleChange('localidade', v)}
               >
                 <SelectTrigger>
@@ -155,11 +155,11 @@ export const ManualEntryForm = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="mesReferencia">Mês de Referência *</Label>
-              <Select 
-                value={formData.mesReferencia} 
+              <Select
+                value={formData.mesReferencia}
                 onValueChange={(v) => handleChange('mesReferencia', v)}
               >
                 <SelectTrigger>
@@ -172,7 +172,7 @@ export const ManualEntryForm = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="dataReserva">Data Reserva</Label>
               <Input
@@ -195,7 +195,7 @@ export const ManualEntryForm = () => {
                 onChange={(e) => handleChange('quantidadeLiberada', e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="quantidadeUtilizada">Qtd. Utilizada</Label>
               <Input
