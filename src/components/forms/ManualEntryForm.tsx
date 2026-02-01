@@ -65,7 +65,7 @@ export const ManualEntryForm = () => {
       material_nome: formData.materialNome.trim().toUpperCase(),
       localidade: formData.localidade as 'Salvador' | 'Lauro',
       mes_referencia: formData.mesReferencia,
-      ano_referencia: 2025,
+      ano_referencia: new Date().getFullYear(),
       quantidade_liberada: Number(formData.quantidadeLiberada) || 0,
       quantidade_utilizada: Number(formData.quantidadeUtilizada) || 0,
       // saldo is a generated column in DB, do not send it
